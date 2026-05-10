@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  level       Int      @default(3) // 1=Admin, 2=Manager, 3=Staff
+  users       User[]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("roles")
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  username     String        @unique
+  email        String        @unique
+  password     String
+  fullName     String        @map("full_name")
+  isActive     Boolean       @default(true) @map("is_active")
+  roleId       Int           @map("role_id")
+  role         Role          @relation(fields: [roleId], references: [id])
+  transactions Transaction[]
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Product {
+  id               Int               @id @default(autoincrement())
+  sku              String            @unique
+  name             String
+  description      String?
+  unit             String            @default("pcs")
+  buyPrice         Decimal           @default(0) @map("buy_price") @db.Decimal(15, 2)
+  sellPrice        Decimal           @default(0) @map("sell_price") @db.Decimal(15, 2)
+  stock            Int               @default(0)
+  minStock         Int               @default(0) @map("min_stock")
+  transactionItems TransactionItem[]
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  @@map("products")
+}
+
+model Supplier {
+  id           Int           @id @default(autoincrement())
+  name         String
+  contact      String?
+  address      String?
+  email        String?
+  transactions Transaction[]
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@map("suppliers")
+}
+
+model Customer {
+  id           Int           @id @default(autoincrement())
+  name         String
+  contact      String?
+  address      String?
+  email        String?
+  transactions Transaction[]
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@map("customers")
+}
+
+model Transaction {
+  id              Int               @id @default(autoincrement())
+  referenceNumber String            @unique @map("reference_number")
+  type            String            // INCOMING | OUTGOING | SALE | PURCHASE
+  date            DateTime          @default(now())
+  notes           String?
+  totalAmount     Decimal           @default(0) @map("total_amount") @db.Decimal(15, 2)
+  userId          Int               @map("user_id")
+  user            User              @relation(fields: [userId], references: [id])
+  supplierId      Int?              @map("supplier_id")
+  supplier        Supplier?         @relation(fields: [supplierId], references: [id])
+  customerId      Int?              @map("customer_id")
+  customer        Customer?         @relation(fields: [customerId], references: [id])
+  items           TransactionItem[]
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  @@map("transactions")
+}
+
+model TransactionItem {
+  id            Int         @id @default(autoincrement())
+  transactionId Int         @map("transaction_id")
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  productId     Int         @map("product_id")
+  product       Product     @relation(fields: [productId], references: [id])
+  quantity      Int
+  price         Decimal     @db.Decimal(15, 2)
+  total         Decimal     @db.Decimal(15, 2)
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  @@map("transaction_items")
+}
