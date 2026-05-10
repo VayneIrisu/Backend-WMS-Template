@@ -4,7 +4,7 @@
   "description": "Warehouse Management System - Backend API",
   "main": "src/index.js",
   "scripts": {
-    "build": "chmod +x node_modules/.bin/prisma && npx prisma generate && npx prisma db push",
+    "build": "npx prisma generate",
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "db:generate": "npx prisma generate",
