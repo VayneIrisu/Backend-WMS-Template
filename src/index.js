@@ -1,7 +1,15 @@
-require('dotenv').config();
+console.log('🔄 [STARTUP] Loading modules...');
+
+try {
+  require('dotenv').config();
+} catch (e) {
+  console.log('⚠️ dotenv not found or no .env file, skipping...');
+}
+
 const express = require('express');
 const cors = require('cors');
 
+console.log('🔄 [STARTUP] Loading routes...');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const roleRoutes = require('./routes/roles');
@@ -10,9 +18,12 @@ const supplierRoutes = require('./routes/suppliers');
 const customerRoutes = require('./routes/customers');
 const transactionRoutes = require('./routes/transactions');
 const reportRoutes = require('./routes/reports');
+console.log('✅ [STARTUP] All routes loaded successfully');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+
+console.log(`🔄 [STARTUP] Configuring server on port ${PORT}...`);
 
 // Middleware
 app.use(cors({
@@ -20,6 +31,11 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
+
+// Root route
+app.get('/', (req, res) => {
+  res.json({ message: 'WMS Backend API is running!', version: '1.0.0' });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -49,5 +65,8 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 WMS Backend running on port ${PORT}`);
-  console.log(`📝 API docs: http://localhost:${PORT}/api/health`);
+  console.log(`📝 API: http://0.0.0.0:${PORT}/api/health`);
+}).on('error', (err) => {
+  console.error('❌ [STARTUP] Failed to start server:', err);
+  process.exit(1);
 });
